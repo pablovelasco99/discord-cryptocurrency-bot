@@ -1,6 +1,7 @@
 const Discord = require('discord.js');
 const client = new Discord.Client();
 const {requestData, requestGasPrice, requestInfo, requestAddressInfo} = require('./API');
+const keys = require('./APIkeys');
 
 
 client.on('ready', () => {
@@ -77,4 +78,4 @@ client.on('message', async (msg) => {
 });
 
 
-client.login();
+client.login(keys.DISCORD.key);

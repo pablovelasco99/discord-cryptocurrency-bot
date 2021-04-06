@@ -1,0 +1,27 @@
+{
+  "name": "cryptocurrency-bot",
+  "version": "1.0.0",
+  "description": "cryptocurrency-bot",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "npx nodemon"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pablovelasco99/cryptocurrency-bot.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/pablovelasco99/cryptocurrency-bot/issues"
+  },
+  "homepage": "https://github.com/pablovelasco99/cryptocurrency-bot#readme",
+  "dependencies": {
+    "axios": "^0.21.1",
+    "discord.js": "^12.5.3",
+    "express": "^4.17.1",
+    "nodemon": "^2.0.7"
+  },
+  "devDependencies": {}
+}
