@@ -24,7 +24,6 @@ async function requestData(){
         methods: 'GET',
         url: keys.API.url,
         headers: {
-          
           'X-CMC_PRO_API_KEY': keys.API.key
         },
         json: true,
@@ -33,6 +32,7 @@ async function requestData(){
         
         console.log("Doing API request (data)");
         const noStatus = res.data.data;
+        
         for(let x of noStatus){
           map[x.symbol] = {
             latestPrice: x.quote.USD.price,
@@ -64,8 +64,8 @@ async function requestInfo(id){
       json: true,
       gzip: true
     }).then(res => {
-
       console.log("Doing API request (info)");
+
       info = res.data.data[id].logo;
     });
 
@@ -99,4 +99,34 @@ async function requestAddressInfo(address){
   return result;
 }
 
-module.exports  = { requestData, requestGasPrice, requestInfo, requestAddressInfo};
+async function requestRealTimeData(pair){
+
+  var result = {};
+
+  await axios({
+    methods: 'GET',
+    url: keys.APIV2.url + pair,
+    headers: {
+      'X-MBX-APIKEY': keys.APIV2.key
+    },
+    json: true,
+    gzip: true
+  }).then(res => {
+    console.log("Doing API request (real time data)");
+
+    result = {
+      priceChange: res.data.priceChange,
+      priceChangePercent: res.data.priceChangePercent,
+      lastPrice: res.data.lastPrice,
+      openPrice: res.data.openPrice,
+      highPrice: res.data.highPrice,
+      lowPrice: res.data.lowPrice,
+      volume: res.data.volume
+    }
+  });
+
+  return result;
+}
+
+
+module.exports  = { requestData, requestGasPrice, requestInfo, requestAddressInfo, requestRealTimeData };
