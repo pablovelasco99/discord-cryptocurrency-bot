@@ -32,7 +32,7 @@ async function requestData(){
         
         console.log("Doing API request (data)");
         const noStatus = res.data.data;
-        
+
         for(let x of noStatus){
           map[x.symbol] = {
             latestPrice: x.quote.USD.price,
@@ -80,7 +80,7 @@ async function requestAddressInfo(address){
 
   await axios({
     methods: 'GET',
-    url: `https://api.ethplorer.io/getAddressInfo/${address}?apiKey=freekey`,
+    url: keys.APIADDRESS.url + `${address}?apiKey=freekey`,
     json: true,
     gzip: true
   }).then(res => {
