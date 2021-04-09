@@ -20,6 +20,19 @@ Now you are ready to start the bot, just type:
 ```
 node run dev
 ```
+Then you will see something like this:
+```
+> cryptocurrency-bot@1.0.0 dev D:\GitHub\discord-cryptocurrency-bot
+> npx nodemon
+
+[nodemon] 2.0.7
+[nodemon] to restart at any time, enter `rs`
+[nodemon] watching path(s): *.*
+[nodemon] watching extensions: js,mjs,json
+[nodemon] starting `node index.js`
+Logged as HarryCryptos#1178
+```
+If not, please open an issue and I will try to help you as soon as possible
 
 ## Commands 
 
@@ -35,4 +48,6 @@ At the moment the bot only have 4 options:
 `!info <pair>` return: actual price, how much the price change since the day before, the % of change,
 the open price, highest price, lowest price and the volume of that crypto.
 
+## Furure updates
 
+The bot will be online 24/7 soon so stay tunned for updates.
