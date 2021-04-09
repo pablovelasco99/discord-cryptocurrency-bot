@@ -45,7 +45,7 @@ At the moment the bot only have 4 options:
 !address: <wallet you want to get info about>
 ```
 
-`!info <pair>` return: actual price, how much the price change since the day before, the % of change,
+`!info <pair>` return actual price, how much the price change since the day before, the % of change,
 the open price, highest price, lowest price and the volume of that crypto.
 
 ## Furure updates
