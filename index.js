@@ -11,6 +11,7 @@ client.on('ready', () => {
 
 client.on('message', async (msg) => {
 
+    //Option disabled 
     /*if(msg.content.substr(0, 5) === '!info'){
 
       let wantedData = msg.content.substr(6, msg.content.length).toUpperCase();
