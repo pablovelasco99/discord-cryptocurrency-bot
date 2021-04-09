@@ -22,7 +22,7 @@ node run dev
 ```
 Then you will see something like this:
 ```
-> cryptocurrency-bot@1.0.0 dev D:\GitHub\discord-cryptocurrency-bot
+> cryptocurrency-bot@1.0.0 dev <your dir here>
 > npx nodemon
 
 [nodemon] 2.0.7
