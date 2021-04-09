@@ -13,8 +13,8 @@ npm install
 ```
 
 After that you have to put in `requestRealTimeData` function of `API.js` the Binance url like
-`https://api.binance.com/api/v3/ticker/24hr?symbol=`, then you have to put yout Binance API key in
-the file `X-MBX-APIKEY` field of the request header.
+`https://api.binance.com/api/v3/ticker/24hr?symbol=`, then you have to put your Binance API key in
+the `X-MBX-APIKEY` field of the request header.
 
 Now you are ready to start the bot, just type:
 ```
