@@ -13,13 +13,26 @@ npm install
 ```
 
 After that you have to put in `requestRealTimeData` function of `API.js` the Binance url like
-`https://api.binance.com/api/v3/ticker/24hr?symbol=`, then you have to put yout Binance API key in
-the file `X-MBX-APIKEY` field of the request header.
+`https://api.binance.com/api/v3/ticker/24hr?symbol=`, then you have to put your Binance API key in
+the `X-MBX-APIKEY` field of the request header.
 
 Now you are ready to start the bot, just type:
 ```
 node run dev
 ```
+Then you will see something like this:
+```
+> cryptocurrency-bot@1.0.0 dev <your dir here>
+> npx nodemon
+
+[nodemon] 2.0.7
+[nodemon] to restart at any time, enter `rs`
+[nodemon] watching path(s): *.*
+[nodemon] watching extensions: js,mjs,json
+[nodemon] starting `node index.js`
+Logged as HarryCryptos#1178
+```
+If not, please open an issue and I will try to help you as soon as possible
 
 ## Commands 
 
@@ -32,7 +45,9 @@ At the moment the bot only have 4 options:
 !address: <wallet you want to get info about>
 ```
 
-`!info <pair>` return: actual price, how much the price change since the day before, the % of change,
+`!info <pair>` return actual price, how much the price change since the day before, the % of change,
 the open price, highest price, lowest price and the volume of that crypto.
 
+## Furure updates
 
+The bot will be online 24/7 soon so stay tunned for updates.
