@@ -52,7 +52,7 @@ the open price, highest price, lowest price and the volume of that crypto.
 
 The bot will be online 24/7 soon so stay tunned for updates.
 
-## LICENSE
+## License
 MIT License
 
 Copyright (c) 2021 Pablo Velasco
