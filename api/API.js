@@ -1,5 +1,5 @@
 const axios = require('axios');
-const keys = require('./APIkeys');
+const keys = require('../config/APIkeys');
 
 async function requestGasPrice(){
   

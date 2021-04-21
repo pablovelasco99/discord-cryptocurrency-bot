@@ -1,8 +1,10 @@
 const Discord = require('discord.js');
 const client = new Discord.Client();
 const {requestData, requestGasPrice, requestInfo, requestAddressInfo,
-  requestRealTimeData} = require('./API');
-const keys = require('./APIkeys');
+  requestRealTimeData} = require('./api/API');
+const keys = require('./config/APIkeys');
+
+const pool = require('./database/database');
 
 
 client.on('ready', () => {
@@ -13,7 +15,7 @@ client.on('message', async (msg) => {
 
     //Option disabled 
     /*if(msg.content.substr(0, 5) === '!info'){
-
+      
       let wantedData = msg.content.substr(6, msg.content.length).toUpperCase();
       let request = await requestData();      
       var symbols = Object.entries(request);
@@ -117,15 +119,132 @@ client.on('message', async (msg) => {
     if(msg.content.substr(0, 5) === '!help'){
       const embed = new Discord.MessageEmbed().setAuthor('Harry Stonks')
       .setColor('0xFFFF00')
-      /*.setDescription(
-        'Harry Cryptos is a bot that allows you to obtain information about different data of crypto world.\n\n' + '**Commands**\n' + '🗃  '
-        + '**!info:** <crypto you want to search>\n\n' + '🛢  ' + '**!gasprice:** return gas cost of an ETH operation\n\n' + '⚖️  ' 
-        + '**!address:** <address you want to get info about>');*/
       .setDescription(
         'Harry Cryptos is a bot that allows you to obtain information about different data of crypto world.\n\n' + '**Commands**\n' + '🗃  '
         + '**!price:** <pair you want to search>\n\n' + '🛢  ' + '**!gasprice:** return gas cost of an ETH operation\n\n' + '⚖️  ' 
         + '**!address:** <address you want to get info about>');
       msg.channel.send(embed);
+    }
+
+    if(msg.content === '!register'){
+
+      let query = await pool.query('SELECT id FROM user WHERE id=?', msg.author.id);
+
+      if(query == 0){
+
+        let data = {
+          id: msg.author.id,
+          start_balance: 10000,
+          available_money: 10000,
+          actual_balance: 10000
+        };
+
+        await pool.query('INSERT INTO user SET ?', data);
+        console.log('Done');
+
+      }else{
+        console.log('User already exists');
+      }
+    }
+
+    if(msg.content === '!balance'){
+
+      let query = await pool.query('SELECT * FROM user WHERE id=?', msg.author.id);
+
+      if(query == 0){
+
+        console.log('Sorry, you are not registered');
+
+      }else{
+
+        console.log(query);
+      }
+      
+    }
+
+    if(msg.content.substr(0, 4) === '!buy'){
+
+      let query = await pool.query('SELECT * FROM user WHERE id=?', msg.author.id);
+
+      if(query == 0){
+
+        console.log('Sorry, you are not registered');
+      }else{
+        let flag = msg.content.indexOf('-');
+        let amount = msg.content.substr(flag+1, msg.content.length);
+        let crypto = msg.content.substring(4, flag).toUpperCase().trim();
+        let request = await requestRealTimeData(crypto);
+
+        if(amount * request.lastPrice > query[0].available_money){
+          console.log('Not enought money');
+        }else{
+          let walletQuery = await pool.query('SELECT * FROM wallet WHERE userID = ? AND crypto = ?', [msg.author.id, crypto]);
+          let userQuery = await pool.query('SELECT * FROM user WHERE id = ?', [msg.author.id]);
+          let x = 0;
+          let walletData = {
+            amount: amount,
+            crypto: crypto,
+            userID: msg.author.id,
+            total_money: amount * request.lastPrice
+          };
+
+          if(walletQuery == 0){
+            
+            await pool.query('INSERT INTO wallet SET ?', [walletData]);
+            walletQuery = await pool.query('SELECT * FROM wallet WHERE userID = ? AND crypto = ?', [msg.author.id, crypto]);
+
+            let historicalData = {
+              amount: amount,
+              crypto: crypto,
+              price: request.lastPrice,
+              total_amount: amount * request.lastPrice,
+              order_type: 'buy',
+              idWallet: walletQuery[0].id
+            };
+
+            await pool.query('INSERT INTO historical SET ?', [historicalData]);
+
+          }else{
+            
+            let historicalData = {
+              amount: amount,
+              crypto: crypto,
+              price: request.lastPrice,
+              total_amount: amount * request.lastPrice,
+              order_type: 'buy',
+              idWallet: walletQuery[0].id
+            };
+            await pool.query('INSERT INTO historical SET ?', [historicalData]);
+            await pool.query('UPDATE wallet SET amount = ?, total_money = ? WHERE id = ?', 
+              [parseFloat(walletQuery[0].amount) + parseFloat(amount), parseFloat(walletQuery[0].amount) + parseFloat(amount) * request.lastPrice, walletQuery[0].id]);
+            x = parseFloat(walletQuery[0].amount) + parseFloat(amount) * request.lastPrice;
+          }
+          await pool.query('UPDATE user SET available_money = ?, actual_balance = ? WHERE id = ?', 
+            [parseFloat(userQuery[0].available_money) - amount * request.lastPrice, parseFloat(userQuery[0].available_money) - amount * request.lastPrice + x, msg.author.id]);
+        }
+        console.log('Done');
+      }
+
+    }
+
+    if(msg.content.substr(0, 5) === '!sell'){
+
+      let query = await pool.query('SELECT * FROM user WHERE id=?', msg.author.id);
+
+      if(query == 0){
+
+        console.log('Sorry, you are not registered');
+      }else{
+        let flag = msg.content.indexOf('-');
+        let amount = msg.content.substr(flag+1, msg.content.length);
+        let data = msg.content.substring(5, flag).toUpperCase().trim();
+        let request = await requestRealTimeData(data);
+
+        let orderQuery = await pool.query('SELECT * FROM record WHERE userID =?', msg.author.id);
+
+        console.log(orderQuery);
+      }
+
     }
   
 });
