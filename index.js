@@ -135,8 +135,7 @@ client.on('message', async (msg) => {
         let data = {
           id: msg.author.id,
           start_balance: 10000,
-          available_money: 10000,
-          actual_balance: 10000
+          available_money: 10000
         };
 
         await pool.query('INSERT INTO user SET ?', data);
@@ -149,15 +148,22 @@ client.on('message', async (msg) => {
 
     if(msg.content === '!balance'){
 
-      let query = await pool.query('SELECT * FROM user WHERE id=?', msg.author.id);
-
-      if(query == 0){
+      let userQuery = await pool.query('SELECT start_balance, available_money FROM user WHERE id=?', msg.author.id);
+      
+      if(userQuery == 0){
 
         console.log('Sorry, you are not registered');
 
       }else{
 
-        console.log(query);
+        let walletQuery = await pool.query('SELECT SUM(total_money) AS total_balance FROM wallet WHERE total_money > 0');
+        
+        let balance = {
+          start_balance: userQuery[0].start_balance,
+          actual_balance: parseFloat(userQuery[0].available_money) + parseFloat(walletQuery[0].total_balance)
+        };
+
+        console.log(balance);
       }
       
     }
@@ -219,8 +225,8 @@ client.on('message', async (msg) => {
               [parseFloat(walletQuery[0].amount) + parseFloat(amount), parseFloat(walletQuery[0].amount) + parseFloat(amount) * request.lastPrice, walletQuery[0].id]);
             x = parseFloat(walletQuery[0].amount) + parseFloat(amount) * request.lastPrice;
           }
-          await pool.query('UPDATE user SET available_money = ?, actual_balance = ? WHERE id = ?', 
-            [parseFloat(userQuery[0].available_money) - amount * request.lastPrice, parseFloat(userQuery[0].available_money) - amount * request.lastPrice + x, msg.author.id]);
+          await pool.query('UPDATE user SET available_money = ? WHERE id = ?', 
+            [parseFloat(userQuery[0].available_money) - amount * request.lastPrice, msg.author.id]);
         }
         console.log('Done');
       }
@@ -235,13 +241,35 @@ client.on('message', async (msg) => {
 
         console.log('Sorry, you are not registered');
       }else{
+
+        let userQuery = await pool.query('SELECT * FROM user WHERE id = ?', [msg.author.id]);
+        
         let flag = msg.content.indexOf('-');
+        let crypto = msg.content.substring(5, flag).toUpperCase().trim();
         let amount = msg.content.substr(flag+1, msg.content.length);
         let data = msg.content.substring(5, flag).toUpperCase().trim();
         let request = await requestRealTimeData(data);
 
-        let orderQuery = await pool.query('SELECT * FROM record WHERE userID =?', msg.author.id);
+        let orderQuery = await pool.query('SELECT * FROM wallet WHERE userID =?', msg.author.id);
 
+        if(orderQuery == 0 || orderQuery[0].amount < amount){
+          console.log('You dont have that amount');
+        }else{
+          let historicalData = {
+            amount: amount,
+            crypto: crypto,
+            price: request.lastPrice,
+            total_amount: amount * request.lastPrice,
+            order_type: 'sell',
+            idWallet: orderQuery[0].id
+          };
+
+          await pool.query('UPDATE wallet SET amount = ?, total_money = ? WHERE userID = ?', 
+            [parseFloat(orderQuery[0].amount) - amount, (parseFloat(orderQuery[0].amount) - amount) * request.lastPrice, msg.author.id]);
+          await pool.query('INSERT INTO historical SET ?', [historicalData]);
+          await pool.query('UPDATE user SET available_money = ? WHERE id = ?', 
+            [parseFloat(userQuery[0].available_money) + amount * request.lastPrice, msg.author.id]);
+        }
         console.log(orderQuery);
       }
 

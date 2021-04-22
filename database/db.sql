@@ -6,7 +6,6 @@ CREATE TABLE user(
     id VARCHAR(35) NOT NULL,
     start_balance VARCHAR(10) NOT NULL,
     available_money VARCHAR(20) NOT NULL,
-    actual_balance VARCHAR(20) NOT NULL,
     PRIMARY KEY(id)
 );
 
