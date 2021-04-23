@@ -13,41 +13,6 @@ client.on('ready', () => {
 
 client.on('message', async (msg) => {
 
-    //Option disabled 
-    /*if(msg.content.substr(0, 5) === '!info'){
-      
-      let wantedData = msg.content.substr(6, msg.content.length).toUpperCase();
-      let request = await requestData();      
-      var symbols = Object.entries(request);
-      var i = 0;
-      while(symbols[i][0] != wantedData){
-        i++;
-      }
-      var info = await requestInfo(symbols[i][1].id);
-      var embed = new Discord.MessageEmbed().setAuthor('Harry Stonks')
-        .setThumbnail(info)
-        .setDescription(`Here you have real time information of ${symbols[i][1].name}`)
-        .setColor('0xFFFF00')
-        .addField('Crypto', wantedData)
-        .addField('Current price', new Intl.NumberFormat("de-DE", {style: "currency", currency: "USD"}).format(symbols[i][1].latestPrice.toFixed(2)))
-        .addField('Market Cap', new Intl.NumberFormat("de-DE", {style: "currency", currency: "USD"}).format(symbols[i][1].marketCap.toFixed(2)))
-        .addField('Circulating suply', new Intl.NumberFormat("de-DE").format(symbols[i][1].circulatingSuply) + " " + wantedData)
-        .addField('Total suply', new Intl.NumberFormat("de-DE", {style: "currency", currency: "USD"}).format(symbols[i][1].totalSuply))
-        .setTimestamp('https://cdn.pixabay.com/photo/2017/01/25/12/31/bitcoin-2007769_960_720.jpg');
-      
-      if(symbols[i][1].change24h < 0){
-        embed.addField('24h %', new Intl.NumberFormat("de-DE")
-          .format(symbols[i][1].change24h.toFixed(2)) + ' ↘️')
-          .setImage('https://pbs.twimg.com/media/EQS914dWAAUzbap.jpg');
-      }else{
-        embed.addField('24h %', new Intl.NumberFormat("de-DE")
-          .format(symbols[i][1].change24h.toFixed(2)) + ' ↗️')
-          .setImage('https://as.com/meristation/imagenes/2021/04/01/noticias/1617282876_321096_1617283489_sumario_normal.jpg');
-      }
-
-      msg.channel.send(embed);
-    }*/
-
     if(msg.content.substr(0, 6) === '!price'){
       
       let data = msg.content.substr(6, msg.content.length).toUpperCase().trim();
@@ -72,7 +37,6 @@ client.on('message', async (msg) => {
 
       msg.channel.send(embed);
     }
-    
 
     if(msg.content === '!gasprice'){
 
@@ -120,15 +84,21 @@ client.on('message', async (msg) => {
       const embed = new Discord.MessageEmbed().setAuthor('Harry Stonks')
       .setColor('0xFFFF00')
       .setDescription(
-        'Harry Cryptos is a bot that allows you to obtain information about different data of crypto world.\n\n' + '**Commands**\n' + '🗃  '
-        + '**!price:** <pair you want to search>\n\n' + '🛢  ' + '**!gasprice:** return gas cost of an ETH operation\n\n' + '⚖️  ' 
-        + '**!address:** <address you want to get info about>');
+        'Harry Cryptos is a bot that allows you to obtain information about different data of crypto world.\n\n' + '**Commands**\n\n'
+        + '**!price:** <pair you want to search>\n\n' + '**!gasprice:** return gas cost of an ETH operation\n\n' 
+        + '**!address:** <address you want to get info about>\n\n **!register:** register your user to trade cryptos \n\n'
+        + '**!balance:** shows your current account balance\n\n **!buy:** <pair and quantity you want to buy>\n\n'
+        + '**!sell:** <pair and quantity you want to sell>\n\n **Example:**\n !buy ADAUSDT-400 -> buy 400 ADAUSDT at current price\n'
+        + '!sell ADAUSDT-20 -> sell 20 ADAUSDT at current price');
       msg.channel.send(embed);
     }
 
     if(msg.content === '!register'){
 
       let query = await pool.query('SELECT id FROM user WHERE id=?', msg.author.id);
+
+      const embed = new Discord.MessageEmbed().setAuthor('Harry Stonks')
+      .setColor('0xFFFF00');
 
       if(query == 0){
 
@@ -139,31 +109,44 @@ client.on('message', async (msg) => {
         };
 
         await pool.query('INSERT INTO user SET ?', data);
-        console.log('Done');
+        
+        embed.setDescription('Registered successfully')
 
       }else{
-        console.log('User already exists');
+        embed.setDescription('Sorry, user already exists')
       }
+
+      msg.channel.send(embed);
+
     }
 
     if(msg.content === '!balance'){
 
       let userQuery = await pool.query('SELECT start_balance, available_money FROM user WHERE id=?', msg.author.id);
       
+      const embed = new Discord.MessageEmbed().setAuthor('Harry Stonks')
+      .setColor('0xFFFF00');
+
       if(userQuery == 0){
 
-        console.log('Sorry, you are not registered');
-
+        embed.setDescription('Sorry, you are not registered');
       }else{
 
-        let walletQuery = await pool.query('SELECT SUM(total_money) AS total_balance FROM wallet WHERE total_money > 0');
-        
-        let balance = {
-          start_balance: userQuery[0].start_balance,
-          actual_balance: parseFloat(userQuery[0].available_money) + parseFloat(walletQuery[0].total_balance)
-        };
+        let walletQuery = await pool.query('SELECT amount, crypto FROM wallet WHERE userID = ?', [msg.author.id]);
 
-        console.log(balance);
+        let total = 0;
+
+        for(const data in walletQuery){
+          console.log(walletQuery[data]);
+          let request = await requestRealTimeData(walletQuery[data].crypto);
+          total += request.lastPrice * walletQuery[data].amount;
+        }
+
+        embed.setDescription('Here you have your balance')
+        .addField('**Start balance:** ', userQuery[0].start_balance)
+        .addField('**Actual balance:**',  parseFloat(userQuery[0].available_money) + total);
+
+        msg.channel.send(embed);
       }
       
     }
@@ -172,17 +155,21 @@ client.on('message', async (msg) => {
 
       let query = await pool.query('SELECT * FROM user WHERE id=?', msg.author.id);
 
-      if(query == 0){
+      const embed = new Discord.MessageEmbed().setAuthor('Harry Stonks')
+      .setColor('0xFFFF00');
 
-        console.log('Sorry, you are not registered');
+      if(query == 0){
+        embed.setDescription('Sorry, you are not registered');
       }else{
         let flag = msg.content.indexOf('-');
         let amount = msg.content.substr(flag+1, msg.content.length);
         let crypto = msg.content.substring(4, flag).toUpperCase().trim();
         let request = await requestRealTimeData(crypto);
 
+        amount = parseFloat(amount);
+
         if(amount * request.lastPrice > query[0].available_money){
-          console.log('Not enought money');
+          embed.setDescription('Sorry, you dont have enough money');
         }else{
           let walletQuery = await pool.query('SELECT * FROM wallet WHERE userID = ? AND crypto = ?', [msg.author.id, crypto]);
           let userQuery = await pool.query('SELECT * FROM user WHERE id = ?', [msg.author.id]);
@@ -223,23 +210,26 @@ client.on('message', async (msg) => {
             await pool.query('INSERT INTO historical SET ?', [historicalData]);
             await pool.query('UPDATE wallet SET amount = ?, total_money = ? WHERE id = ?', 
               [parseFloat(walletQuery[0].amount) + parseFloat(amount), parseFloat(walletQuery[0].amount) + parseFloat(amount) * request.lastPrice, walletQuery[0].id]);
-            x = parseFloat(walletQuery[0].amount) + parseFloat(amount) * request.lastPrice;
+              
           }
           await pool.query('UPDATE user SET available_money = ? WHERE id = ?', 
             [parseFloat(userQuery[0].available_money) - amount * request.lastPrice, msg.author.id]);
+          embed.setDescription('Successful purchase');
         }
-        console.log('Done');
       }
-
+      msg.channel.send(embed);
     }
 
     if(msg.content.substr(0, 5) === '!sell'){
 
       let query = await pool.query('SELECT * FROM user WHERE id=?', msg.author.id);
 
+      const embed = new Discord.MessageEmbed().setAuthor('Harry Stonks')
+      .setColor('0xFFFF00');
+
       if(query == 0){
 
-        console.log('Sorry, you are not registered');
+        embed.setDescription('Sorry, you are not registered');
       }else{
 
         let userQuery = await pool.query('SELECT * FROM user WHERE id = ?', [msg.author.id]);
@@ -250,10 +240,12 @@ client.on('message', async (msg) => {
         let data = msg.content.substring(5, flag).toUpperCase().trim();
         let request = await requestRealTimeData(data);
 
-        let orderQuery = await pool.query('SELECT * FROM wallet WHERE userID =?', msg.author.id);
+        amount = parseFloat(amount);
+        
+        let orderQuery = await pool.query('SELECT * FROM wallet WHERE userID =? AND crypto =?', [msg.author.id, crypto]);
 
-        if(orderQuery == 0 || orderQuery[0].amount < amount){
-          console.log('You dont have that amount');
+        if(orderQuery == 0 || parseFloat(orderQuery[0].amount) < amount){
+          embed.setDescription('Sorry, you dont have that amount');
         }else{
           let historicalData = {
             amount: amount,
@@ -269,9 +261,10 @@ client.on('message', async (msg) => {
           await pool.query('INSERT INTO historical SET ?', [historicalData]);
           await pool.query('UPDATE user SET available_money = ? WHERE id = ?', 
             [parseFloat(userQuery[0].available_money) + amount * request.lastPrice, msg.author.id]);
+          embed.setDescription('Successful sale');
         }
-        console.log(orderQuery);
       }
+      msg.channel.send(embed);
 
     }
   
